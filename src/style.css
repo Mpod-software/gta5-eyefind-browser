@@ -1,0 +1,472 @@
+/* =========================================================================
+   eyeFind — style engine
+   A faithful recreation of GTA V's eyeFind browser chrome.
+   Palette is locked to the in-game source asset.
+   ========================================================================= */
+
+:root {
+  /* --- Locked source colours ------------------------------------------- */
+  --ef-blue:          #3b90d2; /* primary navigation base                  */
+  --ef-blue-light:    #57a4e0; /* toolbar gradient top                     */
+  --ef-blue-mid:      #3b90d2; /* toolbar gradient bottom                  */
+  --ef-blue-dark:     #2f7cb8; /* control hover                            */
+  --ef-blue-darker:   #29709f; /* control active / pressed                 */
+  --ef-yellow:        #fbc02d; /* the bold divider accent                  */
+  --ef-yellow-deep:   #e0a800; /* divider lower edge                       */
+
+  /* --- Neutrals & ink --------------------------------------------------- */
+  --ef-ink:           #16242f; /* address-bar text                         */
+  --ef-ink-soft:      #6b7884; /* placeholder / secondary                  */
+  --ef-field:         #ffffff; /* address-bar fill                         */
+  --ef-field-border:  #2a6688; /* resting field border (monochrome blue)   */
+  --ef-field-focus:   #15303f; /* fine focus border — no glow ring         */
+  --ef-icon:          #eaf3fb; /* flat light-gray icon on blue             */
+  --ef-icon-dim:      #b9d4ea; /* disabled icon                            */
+  --ef-close-red:     #e8443a; /* window close hover                       */
+
+  --ef-shadow:        0 14px 38px rgba(0, 0, 0, 0.34);
+  --chrome-h:         75px;    /* total chrome height — keeps webview math  */
+
+  /* GTA V's signature hand pointer for anything clickable. The bitmap is a
+     stub — drop assets/gta-pointer.png in place and it lights up everywhere;
+     until then the cursor cleanly falls back to the native `pointer`. */
+  --ef-cursor: url('../assets/gta-pointer.png'), pointer;
+}
+
+/* -------------------------------------------------------------------------
+   Global reset — zero margins/padding, hidden shell scrollbars.
+   ------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* the shell never scrolls — only the webview does */
+  background: var(--ef-blue);
+  color: var(--ef-ink);
+  font-family: "Segoe UI", "Helvetica Neue", Roboto, Arial, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: var(--ef-cursor);
+}
+
+/* Kill the system scrollbar on the shell document entirely. */
+body::-webkit-scrollbar { width: 0; height: 0; }
+
+svg { display: block; fill: none; }
+
+/* -------------------------------------------------------------------------
+   Global GTA pointer. The custom cursor owns the entire app shell — every
+   element and interactive state inherits it, so the mouse never reverts to
+   the native OS arrow anywhere inside the window. (Web content loaded in the
+   <webview> is a separate document and manages its own cursor.)
+   ------------------------------------------------------------------------- */
+*,
+*::before,
+*::after,
+html,
+body,
+a,
+button,
+input,
+select,
+textarea {
+  cursor: var(--ef-cursor);
+}
+
+/* =========================================================================
+   CHROME
+   ========================================================================= */
+.eyefind-chrome {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 10;
+  height: var(--chrome-h);
+  background: var(--ef-blue);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* When maximized, the OS removes the corner inset — drop any rounding. */
+body.is-maximized .eyefind-chrome { border-radius: 0; }
+
+/* -------------------------------------------------------------------------
+   Row 1 — titlebar (drag region) + window controls
+   ------------------------------------------------------------------------- */
+.chrome__titlebar {
+  -webkit-app-region: drag; /* the whole bar moves the window */
+  height: 33px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.06));
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none; /* never intercepts the drag */
+}
+
+.brand__eye {
+  display: inline-flex;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+/* Authentic eyeFind logo used as the in-app header/avatar branding. */
+.brand__logo {
+  width: 22px;
+  height: 22px;
+  display: block;
+  object-fit: contain;
+  border-radius: 4px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.brand__wordmark {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
+}
+.brand__eye-text  { color: #ffffff; }
+.brand__find-text { color: var(--ef-yellow); }
+
+/* ---- Window mutation buttons -------------------------------------------- */
+.window-controls {
+  -webkit-app-region: no-drag; /* clickable, not draggable */
+  display: flex;
+  height: 100%;
+  align-self: stretch;
+}
+
+.win-btn {
+  width: 46px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ef-icon);
+  display: grid;
+  place-items: center;
+  cursor: var(--ef-cursor);
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.win-btn svg { stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.win-btn:hover  { background: var(--ef-blue-dark); color: #fff; }
+.win-btn:active { background: var(--ef-blue-darker); }
+
+.win-btn--close:hover  { background: var(--ef-close-red); color: #fff; }
+.win-btn--close:active { background: #c93a31; }
+
+/* Maximize/restore glyph swap, driven by `body.is-maximized`. */
+.win-btn--max .ico-restore { display: none; }
+body.is-maximized .win-btn--max .ico-maximize { display: none; }
+body.is-maximized .win-btn--max .ico-restore  { display: block; }
+
+/* -------------------------------------------------------------------------
+   Row 2 — navigation toolbar
+   ------------------------------------------------------------------------- */
+.chrome__toolbar {
+  position: relative;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  background: linear-gradient(180deg, var(--ef-blue-light), var(--ef-blue-mid));
+}
+
+.nav-cluster {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.nav-btn {
+  width: 30px;
+  height: 28px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ef-icon);
+  display: grid;
+  place-items: center;
+  cursor: var(--ef-cursor);
+  transition: background-color 110ms ease, color 110ms ease, transform 80ms ease;
+}
+.nav-btn svg {
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.nav-btn:hover:not(:disabled)  { background: rgba(0, 0, 0, 0.14); color: #fff; }
+.nav-btn:active:not(:disabled) { background: rgba(0, 0, 0, 0.22); transform: translateY(0.5px); }
+.nav-btn:disabled { color: var(--ef-icon-dim); opacity: 0.55; }
+
+/* Reload button morphs into a stop button while a page is loading. */
+.nav-btn .ico-stop { display: none; }
+body.is-loading #nav-reload .ico-reload { display: none; }
+body.is-loading #nav-reload .ico-stop   { display: block; }
+
+/* ---- The omnibox (address + search) ------------------------------------- */
+.omnibox {
+  -webkit-app-region: no-drag;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  background: var(--ef-field);
+  border: 1px solid var(--ef-field-border);
+  border-radius: 4px;
+  transition: border-color 120ms ease;
+}
+/* Fine monochrome focus border — explicitly NO glow ring. */
+.omnibox:focus-within {
+  border-color: var(--ef-field-focus);
+  box-shadow: inset 0 0 0 1px var(--ef-field-focus);
+}
+
+.omnibox__lock {
+  display: inline-flex;
+  color: #2f8a3e; /* secure green by default */
+  margin-right: 7px;
+}
+.omnibox__lock svg { stroke: currentColor; stroke-width: 1.7; }
+.omnibox__lock.is-insecure { color: var(--ef-ink-soft); }
+
+.omnibox__favicon {
+  width: 16px;
+  height: 16px;
+  margin-right: 7px;
+  border-radius: 2px;
+  object-fit: contain;
+  display: none; /* shown by the renderer once a favicon resolves */
+}
+.omnibox__favicon.is-visible { display: block; }
+/* When a real favicon is present, the lock collapses to keep things tidy. */
+.omnibox.has-favicon .omnibox__lock { display: none; }
+
+.omnibox__input {
+  flex: 1 1 auto;
+  height: 100%;
+  border: 0;
+  outline: 0; /* no modern focus ring */
+  background: transparent;
+  color: var(--ef-ink);
+  font-size: 13px;
+  /* Monospaced URL routing — every character is the same width, so paths and
+     query strings stay crisply legible, terminal-style. */
+  font-family: "Cascadia Code", "Consolas", "SF Mono", "Roboto Mono",
+    ui-monospace, "Liberation Mono", monospace;
+  letter-spacing: 0;
+  user-select: text;
+  cursor: var(--ef-cursor); /* GTA pointer stays consistent, even over the field */
+}
+.omnibox__input::placeholder { color: var(--ef-ink-soft); }
+.omnibox__input::selection    { background: #cfe6fb; }
+
+.omnibox__go {
+  -webkit-app-region: no-drag;
+  width: 26px;
+  height: 24px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ef-blue-darker);
+  display: grid;
+  place-items: center;
+  cursor: var(--ef-cursor);
+  transition: background-color 110ms ease, color 110ms ease;
+}
+.omnibox__go svg { stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.omnibox__go:hover  { background: rgba(59, 144, 210, 0.14); color: var(--ef-blue); }
+.omnibox__go:active { background: rgba(59, 144, 210, 0.24); }
+
+/* =========================================================================
+   LOADING PROGRESS SLIVER
+   Rides the seam between toolbar and yellow divider.
+   ========================================================================= */
+.loadbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px; /* sits directly above the 4px yellow divider */
+  height: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+body.is-loading .loadbar { opacity: 1; }
+
+.loadbar__fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #ffffff, #cfe9ff);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.75);
+  transition: width 180ms ease;
+}
+
+/* =========================================================================
+   THE YELLOW DIVIDER
+   ========================================================================= */
+.chrome__divider {
+  height: 4px;
+  background: linear-gradient(180deg, var(--ef-yellow), var(--ef-yellow-deep));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+/* =========================================================================
+   HISTORY FLYOUT
+   ========================================================================= */
+.history-panel {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  top: 36px;
+  left: 134px;
+  width: 340px;
+  max-height: 380px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #2a6688;
+  border-radius: 6px;
+  box-shadow: var(--ef-shadow);
+  overflow: hidden;
+  z-index: 20;
+  animation: pop-in 130ms ease-out;
+}
+.history-panel[hidden] { display: none; }
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.history-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  color: #fff;
+  background: linear-gradient(180deg, var(--ef-blue-light), var(--ef-blue));
+  border-bottom: 2px solid var(--ef-yellow);
+}
+
+.history-panel__title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+/* Clear History — flat GTA-style action button on the panel header. */
+.history-clear {
+  -webkit-app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.16);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: var(--ef-cursor);
+  transition: background-color 110ms ease, color 110ms ease, opacity 110ms ease;
+}
+.history-clear svg {
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.history-clear:hover:not(:disabled) {
+  background: var(--ef-yellow);
+  color: #16242f; /* GTA divider yellow with dark ink on hover */
+}
+.history-clear:active:not(:disabled) {
+  background: var(--ef-yellow-deep);
+}
+.history-clear:disabled {
+  opacity: 0.4;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.history-panel__list {
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.history-panel__list::-webkit-scrollbar { width: 9px; }
+.history-panel__list::-webkit-scrollbar-thumb { background: #c4d3df; border-radius: 9px; }
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  cursor: var(--ef-cursor);
+  border-bottom: 1px solid #eef2f5;
+  transition: background-color 90ms ease;
+}
+.history-item:hover { background: #eaf4fd; }
+.history-item__fav {
+  width: 16px; height: 16px; flex: 0 0 16px;
+  border-radius: 2px; object-fit: contain;
+  background: #e7eef4;
+}
+.history-item__text { min-width: 0; }
+.history-item__title {
+  font-size: 13px; color: var(--ef-ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.history-item__url {
+  font-size: 11px; color: var(--ef-ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.history-panel__empty {
+  padding: 22px 16px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--ef-ink-soft);
+}
+
+/* =========================================================================
+   THE WEB VIEWPORT
+   ========================================================================= */
+#browser-view {
+  position: fixed;
+  top: var(--chrome-h);
+  left: 0;
+  display: inline-flex; /* webview default; keeps it gapless */
+  background: #ffffff;
+  /* Applies to the bare element only — once a page paints, the guest site
+     owns its own cursor, exactly like a real browser tab. */
+  cursor: var(--ef-cursor);
+}
+
+/* A faint state while the very first paint settles in. */
+#browser-view { transition: opacity 160ms ease; }
+
+/* Any anchor we add to the chrome inherits the GTA hand as well. */
+a {
+  cursor: var(--ef-cursor);
+}

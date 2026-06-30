@@ -1,0 +1,67 @@
+{
+  "name": "eyefind-browser",
+  "productName": "eyeFind",
+  "version": "2.0.0",
+  "description": "A pixel-perfect, standalone desktop clone of the eyeFind browser from Grand Theft Auto V. Built with vanilla JS on Electron.",
+  "keywords": [
+    "electron",
+    "browser",
+    "gta-v",
+    "eyefind",
+    "vanilla-js",
+    "desktop"
+  ],
+  "homepage": "https://github.com/Mpod-software/eyefind-browser#readme",
+  "bugs": {
+    "url": "https://github.com/Mpod-software/eyefind-browser/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mpod-software/eyefind-browser.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Mpod",
+    "url": "https://github.com/Mpod-software"
+  },
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --enable-logging",
+    "assets": "node scripts/generate-assets.js",
+    "predist": "node scripts/generate-assets.js",
+   "dist": "electron-builder --win nsis --x64",
+    "pack": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^31.3.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.eyefind.browser",
+    "productName": "eyeFind",
+    "copyright": "Copyright © 2026 — Fan project, not affiliated with Rockstar Games / Take-Two.",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "forceCodeSigning": false,
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "${productName}-${version}-setup.${ext}"
+    }
+  }
+}
