@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!--
+    The CSP below governs the app shell only. The <webview> renders remote
+    sites in a separate process and is not constrained by this policy.
+  -->
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; img-src 'self' https: http: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'"
+  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eyeFind</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <!-- ================================================================== -->
+  <!--  CHROME — the fixed GTA-V navigation block                          -->
+  <!-- ================================================================== -->
+  <header class="eyefind-chrome" id="chrome">
+
+    <!-- ---- Row 1: titlebar (draggable) + window controls ------------- -->
+    <div class="chrome__titlebar" id="drag-region">
+      <div class="brand" aria-label="eyeFind">
+        <span class="brand__eye" aria-hidden="true">
+          <svg viewBox="0 0 48 28" width="34" height="20">
+            <path d="M2 14C10 2 38 2 46 14C38 26 10 26 2 14Z" fill="#ffffff" />
+            <circle cx="24" cy="14" r="7.4" fill="#3b90d2" />
+            <circle cx="24" cy="14" r="3.4" fill="#0f3550" />
+            <circle cx="26.6" cy="11.4" r="1.5" fill="#ffffff" />
+          </svg>
+        </span>
+        <span class="brand__wordmark">
+          <span class="brand__eye-text">eye</span><span class="brand__find-text">Find</span>
+        </span>
+      </div>
+
+      <!-- Right titlebar controls: window mutation buttons -->
+      <div class="window-controls" role="group" aria-label="Window controls">
+        <button class="win-btn win-btn--min" id="win-minimize" title="Minimize" aria-label="Minimize">
+          <svg viewBox="0 0 16 16" width="11" height="11"><path d="M3 8h10" /></svg>
+        </button>
+        <button class="win-btn win-btn--max" id="win-maximize" title="Maximize" aria-label="Maximize">
+          <svg class="ico-maximize" viewBox="0 0 16 16" width="11" height="11"><rect x="3" y="3" width="10" height="10" /></svg>
+          <svg class="ico-restore" viewBox="0 0 16 16" width="11" height="11">
+            <rect x="4.5" y="4.5" width="7.5" height="7.5" />
+            <path d="M4.5 4.5V2.5h7.5V10h-2" />
+          </svg>
+        </button>
+        <button class="win-btn win-btn--close" id="win-close" title="Close" aria-label="Close">
+          <svg viewBox="0 0 16 16" width="11" height="11"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" /></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ---- Row 2: navigation toolbar --------------------------------- -->
+    <div class="chrome__toolbar">
+      <!-- Left cluster: flat navigation controls -->
+      <div class="nav-cluster" role="group" aria-label="Navigation">
+        <button class="nav-btn" id="nav-back" title="Back (Alt+←)" aria-label="Back" disabled>
+          <svg viewBox="0 0 24 24" width="19" height="19"><path d="M15 5l-7 7 7 7" /></svg>
+        </button>
+        <button class="nav-btn" id="nav-forward" title="Forward (Alt+→)" aria-label="Forward" disabled>
+          <svg viewBox="0 0 24 24" width="19" height="19"><path d="M9 5l7 7-7 7" /></svg>
+        </button>
+        <button class="nav-btn" id="nav-reload" title="Reload (F5)" aria-label="Reload">
+          <svg class="ico-reload" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M20 11.5a8 8 0 10-2.3 5.6" />
+            <path d="M20 4.5v6h-6" />
+          </svg>
+          <svg class="ico-stop" viewBox="0 0 24 24" width="16" height="16"><path d="M5 5l14 14M19 5L5 19" /></svg>
+        </button>
+        <button class="nav-btn" id="nav-home" title="Home" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="19" height="19"><path d="M3.5 11.5L12 4.5l8.5 7" /><path d="M5.5 10v9.5h13V10" /></svg>
+        </button>
+        <button class="nav-btn" id="nav-history" title="History" aria-label="History" aria-haspopup="true" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="19" height="19"><circle cx="12" cy="12" r="8" /><path d="M12 7.5v4.7l3.2 2" /></svg>
+        </button>
+      </div>
+
+      <!-- Center: the live, functional address bar -->
+      <form class="omnibox" id="omnibox" autocomplete="off" novalidate>
+        <span class="omnibox__lock" id="security-indicator" title="Connection" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="11" width="14" height="9" rx="1.6" /><path d="M8 11V8a4 4 0 018 0v3" /></svg>
+        </span>
+        <img class="omnibox__favicon" id="favicon" alt="" width="16" height="16" />
+        <input
+          type="text"
+          id="url-bar"
+          class="omnibox__input"
+          value="https://www.google.com"
+          spellcheck="false"
+          autocapitalize="off"
+          aria-label="Address and search bar"
+          placeholder="Search eyeFind or type a URL"
+        />
+        <button type="button" class="omnibox__go" id="nav-go" title="Go" aria-label="Go">
+          <svg viewBox="0 0 24 24" width="17" height="17"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></svg>
+        </button>
+      </form>
+
+      <!-- History flyout (populated at runtime) -->
+      <div class="history-panel" id="history-panel" role="menu" aria-label="Browsing history" hidden>
+        <div class="history-panel__head">History</div>
+        <ul class="history-panel__list" id="history-list"></ul>
+        <div class="history-panel__empty" id="history-empty">Nothing here yet — go explore Los Santos.</div>
+      </div>
+    </div>
+
+    <!-- ---- Loading progress sliver (sits on the yellow divider) ------- -->
+    <div class="loadbar" id="loadbar" aria-hidden="true"><span class="loadbar__fill" id="loadbar-fill"></span></div>
+
+    <!-- ---- The bold yellow accent divider ---------------------------- -->
+    <div class="chrome__divider" aria-hidden="true"></div>
+  </header>
+
+  <!-- ================================================================== -->
+  <!--  VIEWPORT — the active web view node                                -->
+  <!-- ================================================================== -->
+  <webview
+    id="browser-view"
+    src="https://www.google.com"
+    style="width:100%; height:calc(100vh - 75px); border:none;"
+    allowpopups
+  ></webview>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>
