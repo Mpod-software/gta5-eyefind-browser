@@ -1,6 +1,9 @@
 # eyeFind
 
 A high-fidelity Grand Theft Auto V browser replica built on Electron. Developed by Mpod-software.
+> [!TIP]
+> 🎮 **Looking to just play around with the browser?**
+> If you want to use the application without touching the source code, simply go to the **[Releases](./releases)** section and download the latest setup installer (`.exe`)!
 
 ## Quick Start
 
@@ -18,7 +21,7 @@ npm start
 
 ## Production Build
 
-Build a zero-install, portable Windows executable into `dist/`:
+Build a fully functional Windows installer (`-setup.exe`) into `dist/`:
 
 ```bash
 npm run dist
